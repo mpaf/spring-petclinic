@@ -9,7 +9,7 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - ./mvnw install
+      - ./mvnw install -DskipTests
       - JAR_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
       - echo Logging in to Amazon ECR for fetching Amazon Correto Image...
       - $(aws ecr get-login --no-include-email --registry-ids 489478819445 --region us-west-2)
@@ -17,6 +17,7 @@ phases:
       - echo Logging in to Amazon ECR on destination account and region...
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
       - docker tag petclinic $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/petclinic
+      - printf '{"ImageURI":"%s.dkr.ecr.%s.amazonaws.com/petclinic:latest"}' "$AWS_ACCOUNT_ID" "$AWS_DEFAULT_REGION" > imageDetail.json
       - printf '[{"name":"web","imageUri":"%s.dkr.ecr.%s.amazonaws.com/petclinic:latest"}]' "$AWS_ACCOUNT_ID" "$AWS_DEFAULT_REGION" > imagedefinition.json
 
   post_build:
@@ -28,4 +29,5 @@ cache:
     - '/root/.m2/**/*'
 artifacts:
   files:
+  - imageDetail.json
   - imagedefinition.json
