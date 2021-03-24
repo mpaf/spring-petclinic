@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+  pre_build: ## New pre-build phase for authentication to ECR with Docker CLI
+    commands:
+  build:
+    commands:
+      - echo Build started on `date`
+      - ./mvnw install
+      - JAR_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+cache:
+  paths:
+    - '/root/.m2/**/*'
