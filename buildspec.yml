@@ -11,6 +11,16 @@ phases:
       - echo Build started on `date`
       - ./mvnw install
       - JAR_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+      - echo Logging in to Amazon ECR for fetching Amazon Correto Image...
+      - $(aws ecr get-login --no-include-email --registry-ids 489478819445 --region us-west-2)
+      - docker build --build-arg JAR_FILE=spring-petclinic-$JAR_VERSION.jar -t petclinic .
+      - echo Logging in to Amazon ECR on destination account and region...
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+      - docker tag petclinic $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/petclinic
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/petclinic
 cache:
   paths:
     - '/root/.m2/**/*'
